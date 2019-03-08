@@ -36,6 +36,7 @@ import quickfix.field.AvgPx;
 import quickfix.field.BeginString;
 import quickfix.field.BusinessRejectReason;
 import quickfix.field.ClOrdID;
+import quickfix.field.OrderID;
 import quickfix.field.CumQty;
 import quickfix.field.CxlType;
 import quickfix.field.DeliverToCompID;
@@ -242,6 +243,12 @@ public class BanzaiApplication implements Application {
         } catch (FieldNotFound e) {
         }
 
+        if (message.isSetField(OrderID.FIELD)) {
+            OrderID orderID = new OrderID();
+            message.getField(orderID);
+            order.setOrderID(orderID.getValue());
+        }
+
         orderTableModel.updateOrder(order, message.getField(new ClOrdID()).getValue());
         observableOrder.update(order);
 
@@ -413,6 +420,9 @@ public class BanzaiApplication implements Application {
             case "FIX.4.2":
                 cancel42(order);
                 break;
+            case "FIX.4.4":
+                cancel44(order);
+                break;
         }
     }
 
@@ -444,6 +454,19 @@ public class BanzaiApplication implements Application {
                 new OrigClOrdID(order.getID()), new ClOrdID(id), new Symbol(order.getSymbol()),
                 sideToFIXSide(order.getSide()), new TransactTime());
         message.setField(new OrderQty(order.getQuantity()));
+
+        orderTableModel.addID(order, id);
+        send(message, order.getSessionID());
+    }
+
+    public void cancel44(Order order) {
+        String id = order.generateID();
+        quickfix.fix44.OrderCancelRequest message = new quickfix.fix44.OrderCancelRequest(
+                new OrigClOrdID(order.getID()), new ClOrdID(id),
+                sideToFIXSide(order.getSide()), new TransactTime());
+        message.setField(new OrderQty(order.getQuantity()));
+        message.setField(new Symbol(order.getSymbol()));
+        message.setField(new OrderID(order.getOrderID()));
 
         orderTableModel.addID(order, id);
         send(message, order.getSessionID());
