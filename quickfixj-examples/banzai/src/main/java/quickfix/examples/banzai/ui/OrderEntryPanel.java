@@ -101,6 +101,16 @@ public class OrderEntryPanel extends JPanel implements Observer {
         setBorder(BorderFactory.createEmptyBorder(5, 0, 5, 0));
         setLayout(new GridBagLayout());
         createComponents();
+
+        setDefaults();
+    }
+
+    private void setDefaults(){
+        symbolTextField.setText("MYSYMBOL1");
+        typeComboBox.setSelectedItem(OrderType.LIMIT);
+        tifComboBox.setSelectedItem(OrderTIF.GTC);
+        symbolEntered = true;
+        activateSubmit();
     }
 
     public void addActionListener(ActionListener listener) {
